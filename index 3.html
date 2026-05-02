@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ShadowLab — Native English Coach</title>
+<style>
+  :root {
+    --bg: #0b1120;
+    --panel: #1e293b;
+    --panel-2: #0f172a;
+    --line: #334155;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-2: #818cf8;
+    --success: #4ade80;
+    --record: #ef4444;
+    --warning: #f59e0b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+    overflow-x: hidden;
+  }
+  .container { max-width: 820px; margin: 0 auto; padding-bottom: 3rem; }
+
+  h1 { color: var(--accent); font-size: 1.6rem; margin: 0.5rem 0 0.25rem; text-align: center; letter-spacing: -0.02em; }
+  h1 + .subtitle { text-align: center; color: var(--muted); font-size: 0.95rem; margin-bottom: 1.25rem; }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 8px 24px -8px rgba(0,0,0,0.5);
+  }
+
+  /* Buttons */
+  button {
+    background: var(--accent);
+    color: #0b1120;
+    border: none;
+    padding: 0.85rem 1.25rem;
+    border-radius: 1.5rem;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    margin: 0.35rem 0;
+    transition: transform 0.08s, opacity 0.15s;
+    touch-action: manipulation;
+    font-family: inherit;
+  }
+  button:active { transform: scale(0.97); }
+  button:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; opacity: 0.6; }
+  button.secondary { background: var(--line); color: var(--text); }
+  button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  button.danger { background: var(--record); color: white; }
+  button.danger-outline { background: transparent; color: var(--record); border: 1px solid var(--record); }
+  button.warn { background: var(--warning); color: #0b1120; }
+  button.compact { padding: 0.55rem 0.85rem; font-size: 0.9rem; width: auto; }
+
+  .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .btn-row > button { flex: 1; min-width: 0; margin: 0; }
+
+  /* Inputs */
+  input[type="file"] { display: none; }
+  .file-label {
+    display: block;
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 1rem;
+    border-radius: 1rem;
+    text-align: center;
+    font-weight: 600;
+    border: 2px dashed var(--line);
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+  }
+  .file-label.loaded { border-color: var(--success); color: var(--success); }
+  textarea, input[type="text"] {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.85rem;
+    color: var(--text);
+    font-size: 1rem;
+    font-family: inherit;
+    margin-bottom: 0.75rem;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  textarea { height: 140px; resize: vertical; }
+  textarea:focus, input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  label.field-label { display: block; font-size: 0.85rem; color: var(--muted); margin: 0.5rem 0 0.35rem; font-weight: 600; }
+
+  /* Slider */
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    height: 1.75rem;
+  }
+
+  /* Status text */
+  .status { text-align: center; color: var(--muted); font-size: 0.9rem; margin: 0.5rem 0; }
+  .status.ok { color: var(--success); }
+  .status.warn { color: var(--warning); }
+
+  /* Header bar */
+  .header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .phrase-badge {
+    background: var(--panel-2);
+    padding: 0.4rem 0.85rem;
+    border-radius: 1rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--accent);
+  }
+  .header-controls { display: flex; gap: 0.4rem; }
+  .header-controls button { width: auto; padding: 0.5rem 0.8rem; margin: 0; font-size: 0.85rem; }
+
+  /* Phrase navigator */
+  .phrase-nav {
+    display: flex;
+    gap: 0.3rem;
+    overflow-x: auto;
+    padding: 0.25rem 0 0.5rem;
+    margin-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .phrase-nav::-webkit-scrollbar { display: none; }
+  .phrase-pill {
+    flex-shrink: 0;
+    background: var(--panel-2);
+    color: var(--muted);
+    border: 1px solid var(--line);
+    padding: 0.35rem 0.7rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .phrase-pill.active { background: var(--accent); color: #0b1120; border-color: var(--accent); }
+  .phrase-pill.done { color: var(--success); border-color: var(--success); }
+
+  /* Waveform */
+  .wave-wrap {
+    background: var(--panel-2);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--line);
+  }
+  canvas.waveform {
+    display: block;
+    width: 100%;
+    height: 100px;
+    background: var(--panel-2);
+    border-radius: 0.5rem;
+    touch-action: pan-y;
+  }
+  .wave-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-family: ui-monospace, "SF Mono", monospace;
+    margin-top: 0.4rem;
+    padding: 0 0.25rem;
+  }
+  .wave-tools { display: flex; gap: 0.4rem; margin-top: 0.5rem; flex-wrap: wrap; }
+  .wave-tools button { width: auto; padding: 0.45rem 0.7rem; font-size: 0.8rem; margin: 0; }
+
+  /* Script box */
+  .script-box {
+    background: var(--panel-2);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--line);
+    position: relative;
+    min-height: 3rem;
+    cursor: pointer;
+  }
+  .script-text { font-size: 1.05rem; line-height: 1.5; transition: filter 0.25s; min-height: 1.5em; }
+  .script-box.blurred .script-text { filter: blur(7px); user-select: none; }
+  .script-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-weight: 700;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .script-box.blurred .script-hint { opacity: 1; }
+  .script-meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.4rem; }
+
+  /* Phase card */
+  .phase-card {
+    background: var(--panel-2);
+    border-radius: 1rem;
+    padding: 1rem 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    border-top: 3px solid var(--accent);
+  }
+  .phase-card.phase-1 { border-color: var(--accent); }
+  .phase-card.phase-2 { border-color: var(--accent-2); }
+  .phase-card.phase-3 { border-color: var(--warning); }
+  .phase-card.phase-4 { border-color: var(--success); }
+  .phase-card.phase-5 { border-color: var(--record); }
+
+  .phase-title { font-size: 1.2rem; font-weight: 800; margin: 0 0 0.25rem; }
+  .phase-desc { color: #cbd5e1; font-size: 0.95rem; margin: 0 0 0.85rem; line-height: 1.45; }
+  .coach-tip {
+    background: rgba(56, 189, 248, 0.08);
+    border-left: 3px solid var(--accent);
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    margin: 0.5rem 0 0.85rem;
+    line-height: 1.4;
+  }
+  .coach-tip strong { color: var(--accent); }
+
+  /* Speed selector */
+  .speed-row { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; }
+  .speed-row button { flex: 1; padding: 0.5rem; font-size: 0.85rem; margin: 0; background: var(--line); color: var(--text); }
+  .speed-row button.active { background: var(--accent); color: #0b1120; }
+
+  /* ===== Pitch tracker ===== */
+  .pitch-wrap {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    margin: 0.5rem 0 0.75rem;
+  }
+  canvas.pitch-canvas {
+    display: block;
+    width: 100%;
+    height: 120px;
+    border-radius: 0.5rem;
+    background: #0b1120;
+  }
+  .pitch-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+    padding: 0 0.25rem;
+  }
+  .pitch-legend .swatch {
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    margin-right: 0.3rem;
+    vertical-align: middle;
+  }
+  .pitch-score {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .pitch-score.poor { color: var(--record); }
+  .pitch-score.ok { color: var(--warning); }
+  .pitch-score.good { color: var(--success); }
+
+  /* ===== Stress timeline ===== */
+  .stress-wrap {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    margin: 0.5rem 0 0.75rem;
+  }
+  canvas.stress-canvas {
+    display: block;
+    width: 100%;
+    height: 80px;
+    border-radius: 0.5rem;
+    background: #0b1120;
+  }
+
+  /* ===== Reduction drills ===== */
+  .reduction-card {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(56, 189, 248, 0.08));
+    border: 1px solid var(--warning);
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    margin: 0.5rem 0 0.75rem;
+  }
+  .reduction-title {
+    font-weight: 800;
+    color: var(--warning);
+    font-size: 0.95rem;
+    margin: 0 0 0.5rem;
+  }
+  .reduction-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin: 0.5rem 0;
+    padding: 0.5rem 0.6rem;
+    background: rgba(0,0,0,0.25);
+    border-radius: 0.4rem;
+    border-left: 3px solid var(--accent);
+  }
+  .reduction-target {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 0.95rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .reduction-arrow { color: var(--muted); margin: 0 0.4rem; }
+  .reduction-form {
+    color: var(--success);
+    font-style: italic;
+    font-weight: 700;
+  }
+  .reduction-tip {
+    color: #cbd5e1;
+    font-size: 0.82rem;
+    margin-top: 0.2rem;
+    line-height: 1.35;
+  }
+
+  /* Mic meter */
+  .mic-meter {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    height: 0.6rem;
+    border-radius: 0.3rem;
+    overflow: hidden;
+    margin: 0.5rem 0;
+  }
+  .mic-meter-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--success), var(--warning) 70%, var(--record) 95%);
+    transition: width 0.05s linear;
+  }
+
+  /* Take review */
+  .take-player {
+    margin-top: 0.75rem;
+    background: var(--panel-2);
+    padding: 0.85rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--success);
+  }
+  .take-player p { margin: 0 0 0.5rem; color: var(--success); font-weight: 700; font-size: 0.9rem; }
+  .take-player audio { width: 100%; }
+
+  /* Cheat sheet */
+  details {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+  details > summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--accent);
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: " ▾"; color: var(--muted); }
+  details[open] > summary::after { content: " ▴"; }
+  details .cheat-row { display: grid; grid-template-columns: minmax(110px, 1fr) 2fr; gap: 0.4rem 0.75rem; margin-top: 0.6rem; font-size: 0.9rem; line-height: 1.4; }
+  details .cheat-row strong { color: var(--accent-2); }
+
+  /* Workout panel hidden by default */
+  #workoutUI { display: none; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel);
+    color: var(--text);
+    padding: 0.75rem 1.25rem;
+    border-radius: 1.5rem;
+    border: 1px solid var(--line);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 100;
+    font-size: 0.9rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    max-width: 85vw;
+  }
+  .toast.show { opacity: 1; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    h1 { font-size: 1.35rem; }
+    canvas.waveform { height: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎙 ShadowLab</h1>
+  <div class="subtitle">Pitch tracking · stress timing · reduction drills</div>
+
+  <!-- ============ SETUP PANEL ============ -->
+  <div class="panel" id="setupPanel">
+    <label class="file-label" for="audioUpload" id="fileLabel">📁 1. Tap to load audio (.mp3, .m4a, .wav)</label>
+    <input type="file" id="audioUpload" accept="audio/*,.m4a,.mp3,.wav,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav">
+    <div class="status" id="fileStatus">No audio loaded yet.</div>
+
+    <label class="field-label" for="scriptInput">2. Paste the dialog transcript (one line per phrase if possible)</label>
+    <textarea id="scriptInput" placeholder="Bartlet: What's next?
+Leo: Mr. President, the Joint Chiefs are waiting in the Sit Room.
+Bartlet: Are they now."></textarea>
+
+    <label class="field-label" for="sensSlider">3. Phrase-split sensitivity (drag if music or laugh tracks confuse the splitter)</label>
+    <input type="range" id="sensSlider" min="1" max="10" step="1" value="4">
+    <div class="status" id="sensStatus">Detected phrases: —</div>
+
+    <button id="startWorkoutBtn" disabled>🚀 Start Guided Practice</button>
+    <div class="status warn" id="micStatus" style="display:none;"></div>
+
+    <details>
+      <summary>📖 Coach's cheat sheet — what to listen for</summary>
+      <div class="cheat-row">
+        <strong>Schwa /ə/</strong>
+        <span>Unstressed vowels collapse to "uh." <em>"banana"</em> → b'-NAN-uh. <em>"to"</em> → tə. <em>"and"</em> → n.</span>
+        <strong>Flap T</strong>
+        <span>Between vowels, T → quick D. <em>"water"</em> → wah-der. <em>"got it"</em> → gah-dit. <em>"not at all"</em> → nah-da-dall.</span>
+        <strong>Linking</strong>
+        <span>Consonant + vowel glues. <em>"pick it up"</em> → pi-ki-tup. <em>"hang on"</em> → han-gon.</span>
+        <strong>Reductions</strong>
+        <span><em>going to</em> → gonna · <em>want to</em> → wanna · <em>got to</em> → gotta · <em>did you</em> → didja · <em>what are you</em> → whaddya · <em>how is it</em> → howzit.</span>
+        <strong>Stressed beats</strong>
+        <span>English is stress-timed: content words (nouns, verbs, adjectives) get the BEAT; function words (the, of, to, a) compress between beats. Equal-syllable timing is the #1 non-native giveaway.</span>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============ WORKOUT PANEL ============ -->
+  <div class="panel" id="workoutUI">
+    <div class="header-bar">
+      <div class="phrase-badge" id="phraseInfo">Phrase 1 / 1</div>
+      <div class="header-controls">
+        <button class="ghost" id="prevBtn">◀</button>
+        <button class="ghost" id="skipBtn">▶</button>
+        <button class="danger-outline" id="stopWorkoutBtn">⏹</button>
+      </div>
+    </div>
+
+    <div class="phrase-nav" id="phraseNav"></div>
+
+    <!-- Waveform -->
+    <div class="wave-wrap">
+      <canvas class="waveform" id="waveCanvas"></canvas>
+      <div class="wave-meta">
+        <span id="waveTimeStart">0:00</span>
+        <span id="waveTimeMid">tap waveform to set A · long-press to set B</span>
+        <span id="waveTimeEnd">0:00</span>
+      </div>
+      <div class="wave-tools">
+        <button class="compact secondary" id="splitHereBtn">✂ Split at playhead</button>
+        <button class="compact secondary" id="mergeNextBtn">⇋ Merge with next</button>
+        <button class="compact secondary" id="trimStartBtn">⤓ Trim start</button>
+        <button class="compact secondary" id="trimEndBtn">⤒ Trim end</button>
+      </div>
+    </div>
+
+    <!-- Script (with spoiler blur) -->
+    <div class="script-box blurred" id="scriptBox">
+      <div class="script-hint">👆 Tap to reveal</div>
+      <div class="script-text" id="scriptDisplay">Your script will appear here.</div>
+      <div class="script-meta" id="scriptMeta"></div>
+    </div>
+
+    <!-- Speed selector (always visible) -->
+    <label class="field-label">Playback speed (pitch preserved)</label>
+    <div class="speed-row" id="speedRow">
+      <button data-rate="0.5">0.5×</button>
+      <button data-rate="0.75">0.75×</button>
+      <button data-rate="1" class="active">1.0×</button>
+    </div>
+
+    <!-- Phase card -->
+    <div class="phase-card phase-1" id="phaseCard">
+      <h2 class="phase-title" id="phaseTitle">Phase 1</h2>
+      <p class="phase-desc" id="phaseDesc"></p>
+      <div class="coach-tip" id="coachTip"></div>
+      <div id="dynamicControls"></div>
+    </div>
+
+    <button id="nextPhaseBtn" class="secondary">Next phase ▸</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  audioCtx: null,
+  originalBuffer: null,         // decoded AudioBuffer (for analysis & review mixing)
+  audioEl: null,                // <audio> element for playback (preservesPitch)
+  audioUrl: null,
+  phrases: [],                  // [{start, end}, ...]
+  currentPhraseIdx: 0,
+  currentStep: 1,               // 1..5
+  loopA: null,
+  loopB: null,
+  loopActive: false,
+  playbackRate: 1.0,
+  micStream: null,
+  mediaRecorder: null,
+  recChunks: [],
+  recMimeType: '',
+  micAnalyser: null,
+  micRafId: null,
+  donePhrases: new Set(),
+  wakeLock: null,
+  endStopTimer: null,
+  loopWatchTimer: null,
+};
+
+// ============================================================
+// DOM SHORTCUTS
+// ============================================================
+const $ = id => document.getElementById(id);
+const setupPanel = $('setupPanel');
+const workoutUI = $('workoutUI');
+const fileInput = $('audioUpload');
+const fileLabel = $('fileLabel');
+const fileStatus = $('fileStatus');
+const sensSlider = $('sensSlider');
+const sensStatus = $('sensStatus');
+const scriptInput = $('scriptInput');
+const startBtn = $('startWorkoutBtn');
+const micStatus = $('micStatus');
+const phraseInfo = $('phraseInfo');
+const phraseNav = $('phraseNav');
+const waveCanvas = $('waveCanvas');
+const waveTimeStart = $('waveTimeStart');
+const waveTimeEnd = $('waveTimeEnd');
+const scriptBox = $('scriptBox');
+const scriptDisplay = $('scriptDisplay');
+const scriptMeta = $('scriptMeta');
+const phaseCard = $('phaseCard');
+const phaseTitle = $('phaseTitle');
+const phaseDesc = $('phaseDesc');
+const coachTip = $('coachTip');
+const dynamicControls = $('dynamicControls');
+const nextPhaseBtn = $('nextPhaseBtn');
+const toastEl = $('toast');
+const speedRow = $('speedRow');
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function toast(msg, ms = 2200) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+function fmtTime(sec) {
+  if (!isFinite(sec)) return '0:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+async function unlockAudio() {
+  // iOS requires AudioContext to be created/resumed inside a user gesture.
+  if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (state.audioCtx.state === 'suspended') {
+    try { await state.audioCtx.resume(); } catch (e) {}
+  }
+}
+
+// ============================================================
+// FILE LOADING
+// ============================================================
+function decodeAsync(buffer) {
+  // Single-shot wrapper that handles BOTH callback-style (old WebKit) and Promise-style decodeAudioData,
+  // and never fires the resolution twice.
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const settle = (fn, v) => { if (!settled) { settled = true; fn(v); } };
+    try {
+      const p = state.audioCtx.decodeAudioData(
+        buffer,
+        b => settle(resolve, b),
+        err => settle(reject, err || new Error('decodeAudioData error callback fired with no detail'))
+      );
+      if (p && typeof p.then === 'function') {
+        p.then(b => settle(resolve, b)).catch(err => settle(reject, err));
+      }
+    } catch (err) {
+      settle(reject, err);
+    }
+  });
+}
+
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  fileLabel.classList.remove('loaded');
+  startBtn.disabled = true;
+
+  const name = (file.name || '').toLowerCase();
+  const ext = name.includes('.') ? name.split('.').pop() : '';
+  const sizeMB = file.size / (1024 * 1024);
+
+  // Hard reject formats WebKit on iOS cannot decode in Web Audio. These hang or
+  // silently fail rather than throwing, which is what was making the app feel "stuck".
+  const cannotDecode = ['ogg', 'opus', 'webm', 'oga', 'weba'];
+  if (cannotDecode.includes(ext)) {
+    fileStatus.innerHTML =
+      `❌ <strong>.${ext}</strong> can't be decoded on iPad — Safari/WebKit doesn't support Opus or WebM audio.<br>` +
+      `Convert it to <strong>.m4a</strong> or <strong>.mp3</strong> first (try cloudconvert.com or the iOS Shortcuts app's "Encode Media" action), then re-load.`;
+    return;
+  }
+
+  // Soft warning for very large files (full-episode rips) – decoder is slow on iPad and can use a lot of RAM.
+  if (sizeMB > 30) {
+    fileStatus.innerHTML =
+      `⚠️ This file is <strong>${sizeMB.toFixed(0)} MB</strong> — that's about ${(sizeMB / 6).toFixed(0)} min of audio.<br>` +
+      `iPad can decode it, but it may take 30–60 s and uses a lot of memory. Consider trimming to just the scene you're shadowing.<br>` +
+      `<small>Continuing anyway…</small>`;
+  } else {
+    fileStatus.textContent = `⏳ Reading ${sizeMB.toFixed(1)} MB…`;
+  }
+
+  await unlockAudio();
+
+  // Read bytes — with a timeout, because on Edge's edge://external-file sandbox this can hang silently forever.
+  let arrayBuffer;
+  try {
+    let readTimeoutId;
+    const readTimeout = new Promise((_, rej) => {
+      readTimeoutId = setTimeout(
+        () => rej(new Error('File read timed out after 15 s. This usually means the page is loaded from a local file (file:// or edge://external-file). Host it on https:// or a local web server first.')),
+        15000
+      );
+    });
+    arrayBuffer = await Promise.race([file.arrayBuffer(), readTimeout]);
+    clearTimeout(readTimeoutId);
+  } catch (err) {
+    fileStatus.innerHTML = `❌ Couldn't read the file: <strong>${err.message || err.name}</strong>`;
+    return;
+  }
+
+  // Decode, with a watchdog timeout so we fail loud instead of hanging forever
+  fileStatus.innerHTML = `⏳ Decoding audio… <small>(${sizeMB.toFixed(1)} MB; up to ${Math.max(20, Math.ceil(sizeMB * 1.5))}s on iPad)</small>`;
+
+  const timeoutSec = Math.max(25, Math.ceil(sizeMB * 2));
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error(`Decode timed out after ${timeoutSec}s. The file format is probably unsupported, or the clip is too long.`)),
+      timeoutSec * 1000
+    );
+  });
+
+  try {
+    state.originalBuffer = await Promise.race([decodeAsync(arrayBuffer.slice(0)), timeoutPromise]);
+    clearTimeout(timeoutId);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.error('decodeAudioData failed:', err);
+    const detail = err && (err.message || err.name) ? (err.message || err.name) : 'unknown error';
+    fileStatus.innerHTML =
+      `❌ Decode failed: <strong>${detail}</strong><br>` +
+      `Most common causes on iPad:<br>` +
+      `&nbsp;• File is Opus / OGG / WebM (export from YouTube, Discord, etc.) — convert to .m4a or .mp3<br>` +
+      `&nbsp;• MP3 has a corrupt or unusual header — re-encode in any audio editor<br>` +
+      `&nbsp;• File is a video container (.mp4 with video track) — extract audio first<br>` +
+      `&nbsp;• Clip is over ~25 min — trim to the scene you want to shadow`;
+    return;
+  }
+
+  // Build a blob URL for the <audio> element (so we get pitch-preserving playbackRate)
+  if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+  state.audioUrl = URL.createObjectURL(file);
+  if (!state.audioEl) {
+    state.audioEl = new Audio();
+    state.audioEl.preload = 'auto';
+    state.audioEl.playsInline = true;
+    // preservesPitch: standard property (Safari/iOS 16+); also set vendor variants for safety
+    state.audioEl.preservesPitch = true;
+    state.audioEl.mozPreservesPitch = true;
+    state.audioEl.webkitPreservesPitch = true;
+  }
+  state.audioEl.src = state.audioUrl;
+
+  fileLabel.classList.add('loaded');
+  fileLabel.textContent = `✅ Loaded: ${file.name}  (${fmtTime(state.originalBuffer.duration)})`;
+
+  recomputePhrases();
+  startBtn.disabled = false;
+});
+
+sensSlider.addEventListener('input', () => {
+  if (state.originalBuffer) recomputePhrases();
+});
+
+function recomputePhrases() {
+  const sens = parseInt(sensSlider.value, 10); // 1..10
+  state.phrases = detectPhrases(state.originalBuffer, sens);
+  fileStatus.textContent = '';
+  sensStatus.textContent = `Detected phrases: ${state.phrases.length} (you can split/merge them inside Practice)`;
+}
+
+// ============================================================
+// PHRASE DETECTION
+// Tuned for sitcom audio: laugh tracks defeat naive RMS gating, so we use
+// a slightly stricter floor + a hard maximum phrase length that auto-splits
+// long utterances at the lowest-energy local minimum.
+// ============================================================
+function detectPhrases(buffer, sensitivity) {
+  const data = buffer.getChannelData(0);
+  const sr = buffer.sampleRate;
+  const winSize = Math.floor(sr * 0.04);    // 40 ms window
+  const hop     = Math.floor(sr * 0.02);    // 20 ms hop
+
+  // Compute RMS envelope
+  const env = [];
+  for (let i = 0; i + winSize < data.length; i += hop) {
+    let sum = 0;
+    for (let j = 0; j < winSize; j++) {
+      const v = data[i + j];
+      sum += v * v;
+    }
+    env.push(Math.sqrt(sum / winSize));
+  }
+
+  // Sensitivity 1..10 → silence-RMS threshold 0.005..0.05
+  // Higher slider value = more aggressive cutting (treats more as silence)
+  const threshold = 0.005 + (sensitivity / 10) * 0.045;
+  // Min silence duration that counts as a phrase boundary (0.35s)
+  const minSilenceFrames = Math.floor(0.35 / 0.02);
+  // Min phrase length (0.6s) – discard noise blips
+  const minPhraseSec = 0.6;
+  // Max phrase length (5.5s) – auto-split anything longer
+  const maxPhraseSec = 5.5;
+
+  // Find silence regions
+  const silences = [];
+  let silStart = -1, silLen = 0;
+  for (let i = 0; i < env.length; i++) {
+    if (env[i] < threshold) {
+      if (silStart < 0) silStart = i;
+      silLen++;
+    } else {
+      if (silStart >= 0 && silLen >= minSilenceFrames) {
+        silences.push([silStart * hop / sr, (silStart + silLen) * hop / sr]);
+      }
+      silStart = -1; silLen = 0;
+    }
+  }
+  if (silStart >= 0 && silLen >= minSilenceFrames) {
+    silences.push([silStart * hop / sr, (silStart + silLen) * hop / sr]);
+  }
+
+  // Phrases = audio between silences, padded slightly inward
+  const pad = 0.05; // include 50ms of breath onset/release
+  const dur = buffer.duration;
+  const cuts = [];
+  let cursor = 0;
+  for (let i = 0; i < silences.length; i++) {
+    const [a, b] = silences[i];
+    if (a - cursor >= minPhraseSec) {
+      cuts.push({ start: Math.max(0, cursor - pad), end: Math.min(dur, a + pad) });
+    }
+    cursor = b;
+  }
+  if (dur - cursor >= minPhraseSec) {
+    cuts.push({ start: Math.max(0, cursor - pad), end: dur });
+  }
+
+  // Auto-split anything > maxPhraseSec at lowest-energy interior point
+  const finalCuts = [];
+  for (const c of cuts) {
+    if (c.end - c.start <= maxPhraseSec) {
+      finalCuts.push(c);
+      continue;
+    }
+    // recursively split
+    const queue = [c];
+    while (queue.length) {
+      const cur = queue.shift();
+      if (cur.end - cur.start <= maxPhraseSec) { finalCuts.push(cur); continue; }
+      // find lowest-energy frame in middle 60% of the segment
+      const sFrame = Math.floor(cur.start / 0.02);
+      const eFrame = Math.floor(cur.end / 0.02);
+      const mStart = sFrame + Math.floor((eFrame - sFrame) * 0.2);
+      const mEnd   = sFrame + Math.floor((eFrame - sFrame) * 0.8);
+      let minIdx = mStart, minVal = Infinity;
+      for (let i = mStart; i < mEnd && i < env.length; i++) {
+        if (env[i] < minVal) { minVal = env[i]; minIdx = i; }
+      }
+      const splitAt = minIdx * 0.02;
+      queue.push({ start: cur.start, end: splitAt });
+      queue.push({ start: splitAt, end: cur.end });
+    }
+  }
+
+  return finalCuts.length ? finalCuts : [{ start: 0, end: dur }];
+}
+
+// ============================================================
+// MICROPHONE
+// ============================================================
+async function ensureMic() {
+  if (state.micStream) return true;
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    micStatus.style.display = 'block';
+    micStatus.textContent = '⚠️ Mic API not available. On iPad, open this file via https:// (not the Files app — try GitHub Pages, iCloud public link, or a local server).';
+    return false;
+  }
+  try {
+    state.micStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      }
+    });
+    micStatus.style.display = 'none';
+    return true;
+  } catch (err) {
+    micStatus.style.display = 'block';
+    if (err.name === 'NotAllowedError') {
+      micStatus.textContent = '⚠️ Mic permission denied. In Edge on iPad: Settings ▸ tap the address bar lock icon ▸ allow microphone, then reload.';
+    } else if (location.protocol === 'file:') {
+      micStatus.textContent = '⚠️ This page is loaded as a local file — iOS blocks the mic for file:// URLs. Host it on GitHub Pages, an iCloud public link, or a local server (e.g. python3 -m http.server) and open via https:// or http://localhost.';
+    } else {
+      micStatus.textContent = '⚠️ Mic unavailable: ' + (err.message || err.name);
+    }
+    return false;
+  }
+}
+
+// ============================================================
+// START / NAVIGATION
+// ============================================================
+startBtn.onclick = async () => {
+  await unlockAudio();
+  const ok = await ensureMic();
+  if (!ok) {
+    toast('Mic blocked — see notice above.');
+    return;
+  }
+  // Auto-split script by line break to align with phrases (best-effort)
+  state.scriptLines = scriptInput.value
+    .split(/\r?\n/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  state.currentPhraseIdx = 0;
+  state.currentStep = 1;
+  state.donePhrases.clear();
+
+  setupPanel.style.display = 'none';
+  workoutUI.style.display = 'block';
+
+  await requestWakeLock();
+  buildPhraseNav();
+  loadPhraseStep();
+  // size the canvas now that it's visible
+  setTimeout(sizeWaveform, 0);
+};
+
+$('stopWorkoutBtn').onclick = () => {
+  stopAudio();
+  stopRecordingMeter();
+  releaseWakeLock();
+  setupPanel.style.display = 'block';
+  workoutUI.style.display = 'none';
+};
+
+$('skipBtn').onclick = () => goToPhrase(state.currentPhraseIdx + 1);
+$('prevBtn').onclick = () => goToPhrase(state.currentPhraseIdx - 1);
+
+function goToPhrase(idx) {
+  if (idx < 0 || idx >= state.phrases.length) {
+    if (idx >= state.phrases.length) finishWorkout();
+    return;
+  }
+  stopAudio();
+  state.currentPhraseIdx = idx;
+  state.currentStep = 1;
+  state.loopA = state.loopB = null;
+  scriptBox.classList.add('blurred');
+  loadPhraseStep();
+}
+
+nextPhaseBtn.onclick = () => {
+  stopAudio();
+  if (state.currentStep < 5) {
+    state.currentStep++;
+    loadPhraseStep();
+  } else {
+    state.donePhrases.add(state.currentPhraseIdx);
+    if (state.currentPhraseIdx < state.phrases.length - 1) {
+      goToPhrase(state.currentPhraseIdx + 1);
+    } else {
+      finishWorkout();
+    }
+  }
+};
+
+function finishWorkout() {
+  stopAudio();
+  releaseWakeLock();
+  phaseTitle.textContent = '🎉 Scene mastered!';
+  phaseDesc.textContent = `You worked through ${state.phrases.length} phrase${state.phrases.length === 1 ? '' : 's'}. Run it again tomorrow — sleep is when the new motor patterns lock in.`;
+  coachTip.style.display = 'none';
+  dynamicControls.innerHTML = '';
+  nextPhaseBtn.style.display = 'none';
+}
+
+// ============================================================
+// PHRASE NAVIGATOR
+// ============================================================
+function buildPhraseNav() {
+  phraseNav.innerHTML = '';
+  state.phrases.forEach((p, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'phrase-pill';
+    pill.textContent = `${i + 1}`;
+    pill.onclick = () => goToPhrase(i);
+    phraseNav.appendChild(pill);
+  });
+  updatePhraseNavHighlight();
+}
+function updatePhraseNavHighlight() {
+  [...phraseNav.children].forEach((pill, i) => {
+    pill.classList.toggle('active', i === state.currentPhraseIdx);
+    pill.classList.toggle('done', state.donePhrases.has(i) && i !== state.currentPhraseIdx);
+  });
+  // scroll active into view
+  const active = phraseNav.children[state.currentPhraseIdx];
+  if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+}
+
+// ============================================================
+// PHASE FLOW (5 phases of the Friends method)
+// ============================================================
+const PHASES = [
+  null,
+  {
+    n: 1, cls: 'phase-1', color: 'var(--accent)',
+    title: 'Phase 1 · Listen',
+    desc: 'Eyes closed. Play the phrase 3–4 times. Just absorb the melody — do not try to repeat anything yet.',
+    tip: '<strong>What to listen for:</strong> Where does the pitch rise? Where does it fall? Which word is loudest? Notice the music before the words.'
+  },
+  {
+    n: 2, cls: 'phase-2', color: 'var(--accent-2)',
+    title: 'Phase 2 · Hum the pitch',
+    desc: 'Mouth closed. Hum into the mic — your pitch will be drawn in <span style="color:var(--success)">green</span>, the original in <span style="color:var(--accent)">blue</span>. Match the curve.',
+    tip: '<strong>Reading the chart:</strong> The blue line is what you\'re imitating. Higher = higher pitch. Where it jumps up, that\'s a stressed syllable. Most non-natives draw a nearly-flat green line. Aim to match the peaks and the falls — that\'s 80% of sounding native.'
+  },
+  {
+    n: 3, cls: 'phase-3', color: 'var(--warning)',
+    title: 'Phase 3 · Whisper the rhythm',
+    desc: 'Whisper along at 0.75×. Watch the <span style="color:var(--warning)">stress bars</span> — tall bars are beats, gaps are compressed function words. Hit the beats.',
+    tip: '<strong>What to feel:</strong> English is stress-timed. Tall bars get a long, loud syllable; the compressed valleys between them are where <em>"to / of / the / and / a"</em> get crushed. If your whisper has even timing, you sound non-native even with perfect sounds.'
+  },
+  {
+    n: 4, cls: 'phase-4', color: 'var(--success)',
+    title: 'Phase 4 · Loop the hard part',
+    desc: 'Tap the waveform to set <strong>A</strong> just before a tricky cluster. Long-press to set <strong>B</strong> just after. Loop and chant until your tongue stops tripping.',
+    tip: '<strong>Targets:</strong> consonant clusters (<em>"strict"</em>), reductions (<em>"whaddaya"</em>), flap Ts (<em>"got it"</em>), th sounds (<em>"the other"</em>). Loop 8–12 times — neuroplasticity needs reps.'
+  },
+  {
+    n: 5, cls: 'phase-5', color: 'var(--record)',
+    title: 'Phase 5 · Record & compare',
+    desc: 'Speak <em>simultaneously</em> with the original. The recording plays the original in your left ear and you in your right — listen for where the rhythm drifts apart.',
+    tip: '<strong>Self-diagnosis:</strong> If you finish later than the original, you are not reducing function words enough. If your pitch sounds flat against theirs, exaggerate the highs and lows by 30% next take.'
+  }
+];
+
+function loadPhraseStep() {
+  const phrase = state.phrases[state.currentPhraseIdx];
+  if (!phrase) { finishWorkout(); return; }
+
+  phraseInfo.textContent = `Phrase ${state.currentPhraseIdx + 1} / ${state.phrases.length}`;
+  updatePhraseNavHighlight();
+
+  // Reset audio context if suspended (iOS auto-suspends sometimes)
+  if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume();
+
+  // Render waveform
+  drawWaveform();
+
+  // Update script display
+  const line = state.scriptLines && state.scriptLines[state.currentPhraseIdx];
+  if (line) {
+    scriptDisplay.textContent = line;
+    scriptMeta.textContent = `${(phrase.end - phrase.start).toFixed(2)}s · line ${state.currentPhraseIdx + 1} of script`;
+  } else if (state.scriptLines && state.scriptLines.length) {
+    scriptDisplay.textContent = '(no transcript line for this phrase — paste one below if you have it)';
+    scriptMeta.textContent = `${(phrase.end - phrase.start).toFixed(2)}s · script lines: ${state.scriptLines.length}`;
+  } else {
+    scriptDisplay.textContent = '(no script provided)';
+    scriptMeta.textContent = `${(phrase.end - phrase.start).toFixed(2)}s`;
+  }
+
+  // Phase metadata
+  const ph = PHASES[state.currentStep];
+  phaseCard.className = 'phase-card ' + ph.cls;
+  phaseTitle.textContent = ph.title;
+  phaseTitle.style.color = ph.color;
+  phaseDesc.innerHTML = ph.desc;
+  coachTip.innerHTML = ph.tip;
+  coachTip.style.display = '';
+  dynamicControls.innerHTML = '';
+  nextPhaseBtn.style.display = 'block';
+  nextPhaseBtn.textContent = state.currentStep < 5 ? 'Next phase ▸' : (state.currentPhraseIdx < state.phrases.length - 1 ? 'Next phrase ▸▸' : 'Finish 🎉');
+
+  // Per-phase controls
+  if (state.currentStep === 1) {
+    addPlayButton('▶︎ Play phrase', 1.0);
+    addPlayButton('▶︎ Play (0.75×)', 0.75, 'secondary');
+  } else if (state.currentStep === 2) {
+    buildPitchTrackerControls(phrase);
+  } else if (state.currentStep === 3) {
+    setRate(0.75);
+    buildStressTimelineControls(phrase);
+  } else if (state.currentStep === 4) {
+    buildLooperControls(phrase);
+  } else if (state.currentStep === 5) {
+    buildRecordControls(phrase);
+  }
+
+  // Reductions panel — show under the script for any phase if the line has detected reductions
+  renderReductionPanel(line);
+}
+
+function addPlayButton(label, rate, cls = '', opts = {}) {
+  const btn = document.createElement('button');
+  btn.textContent = label;
+  if (cls) btn.className = cls;
+  btn.onclick = async () => {
+    await unlockAudio();
+    const phrase = state.phrases[state.currentPhraseIdx];
+    setRate(rate);
+    if (opts.loopFull) {
+      playSegment(phrase.start, phrase.end, true);
+    } else {
+      playSegment(phrase.start, phrase.end, false);
+    }
+  };
+  dynamicControls.appendChild(btn);
+}
+
+// ============================================================
+// PITCH TRACKER (Phase 2)
+// Uses YIN autocorrelation. The original phrase's pitch is computed
+// once and cached; the user's pitch is computed live from the mic.
+// ============================================================
+function buildPitchTrackerControls(phrase) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pitch-wrap';
+  const canvas = document.createElement('canvas');
+  canvas.className = 'pitch-canvas';
+  canvas.id = 'pitchCanvas';
+  wrap.appendChild(canvas);
+
+  const legend = document.createElement('div');
+  legend.className = 'pitch-legend';
+  legend.innerHTML = `
+    <span><span class="swatch" style="background:var(--accent)"></span>Original</span>
+    <span><span class="swatch" style="background:var(--success)"></span>You</span>
+    <span class="pitch-score" id="pitchScore">Match: —</span>
+  `;
+  wrap.appendChild(legend);
+  dynamicControls.appendChild(wrap);
+
+  // Compute original pitch contour (cached per phrase)
+  if (!phrase._pitchContour) {
+    phrase._pitchContour = extractPitchContour(state.originalBuffer, phrase.start, phrase.end);
+  }
+
+  // Size canvas with DPR
+  setTimeout(() => sizePitchCanvas(canvas), 0);
+  drawPitchContour(canvas, phrase._pitchContour, []);
+
+  // User pitch buffer
+  const userContour = [];
+
+  const playBtn = document.createElement('button');
+  playBtn.textContent = '▶︎ Play original';
+  playBtn.className = 'secondary';
+  playBtn.onclick = async () => {
+    await unlockAudio();
+    setRate(1.0);
+    playSegment(phrase.start, phrase.end, false);
+  };
+
+  const slowBtn = document.createElement('button');
+  slowBtn.textContent = '▶︎ Play slow (0.75×)';
+  slowBtn.className = 'secondary';
+  slowBtn.onclick = async () => {
+    await unlockAudio();
+    setRate(0.75);
+    playSegment(phrase.start, phrase.end, false);
+  };
+
+  const humBtn = document.createElement('button');
+  humBtn.textContent = '🎙 Hum along (record your pitch)';
+  let recording = false;
+  let humRafId = null;
+  humBtn.onclick = async () => {
+    if (recording) {
+      stopHumTracking();
+      return;
+    }
+    await unlockAudio();
+    const ok = await ensureMic();
+    if (!ok) return;
+    recording = true;
+    humBtn.classList.add('danger');
+    humBtn.textContent = '⏹ Stop & score';
+    userContour.length = 0;
+
+    // Set up mic analyser
+    const src = state.audioCtx.createMediaStreamSource(state.micStream);
+    const analyser = state.audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    src.connect(analyser);
+    state._humSrc = src;
+    state._humAnalyser = analyser;
+
+    const startTime = state.audioCtx.currentTime;
+    const phraseDur = phrase.end - phrase.start;
+    const buf = new Float32Array(analyser.fftSize);
+    const tick = () => {
+      if (!recording) return;
+      analyser.getFloatTimeDomainData(buf);
+      const t = state.audioCtx.currentTime - startTime;
+      if (t > phraseDur + 0.5) { stopHumTracking(); return; }
+      const hz = yinPitch(buf, state.audioCtx.sampleRate);
+      userContour.push({ t, hz });
+      drawPitchContour(canvas, phrase._pitchContour, userContour);
+      humRafId = requestAnimationFrame(tick);
+    };
+    tick();
+
+    // Also play the original at 0.75× as reference
+    setRate(0.75);
+    playSegment(phrase.start, phrase.end, false);
+  };
+
+  function stopHumTracking() {
+    recording = false;
+    humBtn.classList.remove('danger');
+    humBtn.textContent = '🎙 Hum along (record your pitch)';
+    if (humRafId) cancelAnimationFrame(humRafId);
+    humRafId = null;
+    if (state._humSrc) try { state._humSrc.disconnect(); } catch(e){}
+    state._humSrc = null;
+    state._humAnalyser = null;
+    stopAudio();
+    // Score the match
+    const score = scorePitchMatch(phrase._pitchContour, userContour);
+    const scoreEl = legend.querySelector('#pitchScore');
+    if (score === null) {
+      scoreEl.textContent = 'Match: not enough voicing';
+      scoreEl.className = 'pitch-score poor';
+    } else {
+      scoreEl.textContent = `Match: ${Math.round(score)}%`;
+      scoreEl.className = 'pitch-score ' + (score > 75 ? 'good' : score > 55 ? 'ok' : 'poor');
+    }
+    drawPitchContour(canvas, phrase._pitchContour, userContour);
+  }
+
+  dynamicControls.appendChild(playBtn);
+  dynamicControls.appendChild(slowBtn);
+  dynamicControls.appendChild(humBtn);
+}
+
+function sizePitchCanvas(canvas) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.floor(canvas.clientWidth * dpr);
+  canvas.height = Math.floor(canvas.clientHeight * dpr);
+  canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+// YIN pitch detection — robust on noisy signals, much better than autocorrelation alone.
+function yinPitch(buf, sampleRate, threshold = 0.15) {
+  const N = buf.length;
+  const halfN = Math.floor(N / 2);
+  const yinBuf = new Float32Array(halfN);
+
+  // Difference function
+  for (let tau = 1; tau < halfN; tau++) {
+    let sum = 0;
+    for (let i = 0; i < halfN; i++) {
+      const d = buf[i] - buf[i + tau];
+      sum += d * d;
+    }
+    yinBuf[tau] = sum;
+  }
+
+  // Cumulative mean normalized difference
+  yinBuf[0] = 1;
+  let runningSum = 0;
+  for (let tau = 1; tau < halfN; tau++) {
+    runningSum += yinBuf[tau];
+    yinBuf[tau] *= tau / runningSum;
+  }
+
+  // Find first tau below threshold
+  let tauEstimate = -1;
+  for (let tau = 2; tau < halfN; tau++) {
+    if (yinBuf[tau] < threshold) {
+      while (tau + 1 < halfN && yinBuf[tau + 1] < yinBuf[tau]) tau++;
+      tauEstimate = tau;
+      break;
+    }
+  }
+  if (tauEstimate === -1) return 0;
+
+  // Parabolic interpolation around the minimum
+  const x0 = tauEstimate < 1 ? tauEstimate : tauEstimate - 1;
+  const x2 = tauEstimate + 1 < halfN ? tauEstimate + 1 : tauEstimate;
+  let betterTau = tauEstimate;
+  if (x0 !== tauEstimate && x2 !== tauEstimate) {
+    const s0 = yinBuf[x0], s1 = yinBuf[tauEstimate], s2 = yinBuf[x2];
+    betterTau = tauEstimate + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
+  }
+  const hz = sampleRate / betterTau;
+  // Reject implausible (sub-50 Hz / super-800 Hz) pitches — likely noise
+  if (hz < 65 || hz > 700) return 0;
+  return hz;
+}
+
+// Extract a pitch contour from an AudioBuffer slice.
+function extractPitchContour(buffer, startSec, endSec) {
+  const sr = buffer.sampleRate;
+  const data = buffer.getChannelData(0);
+  const startSample = Math.floor(startSec * sr);
+  const endSample = Math.min(data.length, Math.floor(endSec * sr));
+  const winSize = 2048;
+  const hop = Math.floor(sr * 0.025); // 25 ms
+  const out = [];
+  const tmp = new Float32Array(winSize);
+  for (let i = startSample; i + winSize < endSample; i += hop) {
+    for (let j = 0; j < winSize; j++) tmp[j] = data[i + j];
+    const hz = yinPitch(tmp, sr);
+    out.push({ t: (i - startSample) / sr, hz });
+  }
+  return out;
+}
+
+function drawPitchContour(canvas, originalContour, userContour) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  ctx.clearRect(0, 0, w, h);
+
+  // Background grid in semitones
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+  ctx.lineWidth = 1;
+  for (let y = 0; y < h; y += h / 6) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // Determine pitch range from BOTH contours so they align visually
+  const all = originalContour.concat(userContour).filter(p => p.hz > 0);
+  if (!all.length) {
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+    ctx.font = '600 12px ui-monospace, monospace';
+    ctx.fillText('No pitch detected — try again, hum loudly', 12, h / 2);
+    return;
+  }
+  const hzs = all.map(p => p.hz).sort((a, b) => a - b);
+  // Use 5th–95th percentile to ignore outliers
+  const lo = hzs[Math.floor(hzs.length * 0.05)] * 0.92;
+  const hi = hzs[Math.floor(hzs.length * 0.95)] * 1.08;
+
+  // Time range
+  const maxT = Math.max(
+    originalContour.length ? originalContour[originalContour.length - 1].t : 0,
+    userContour.length ? userContour[userContour.length - 1].t : 0
+  ) || 1;
+
+  const hzToY = hz => h - ((Math.log2(hz) - Math.log2(lo)) / (Math.log2(hi) - Math.log2(lo))) * h;
+  const tToX = t => (t / maxT) * w;
+
+  function drawLine(contour, color, lineWidth) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    let pen = false;
+    for (const p of contour) {
+      if (p.hz <= 0) { pen = false; continue; }
+      const x = tToX(p.t);
+      const y = hzToY(p.hz);
+      if (!pen) { ctx.moveTo(x, y); pen = true; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  drawLine(originalContour, '#38bdf8', 3);
+  drawLine(userContour, '#4ade80', 2.5);
+}
+
+// Compute a "match" score 0..100 by correlating user pitch curve to original.
+function scorePitchMatch(orig, user) {
+  if (!user.length || user.filter(p => p.hz > 0).length < 5) return null;
+  // Align by time, sample at common grid
+  const maxT = Math.max(
+    orig[orig.length - 1] ? orig[orig.length - 1].t : 0,
+    user[user.length - 1] ? user[user.length - 1].t : 0
+  );
+  if (maxT <= 0) return null;
+  const N = 50;
+  const oSamples = [], uSamples = [];
+  for (let i = 0; i < N; i++) {
+    const t = (i / (N - 1)) * maxT;
+    oSamples.push(sampleContourLog(orig, t));
+    uSamples.push(sampleContourLog(user, t));
+  }
+  // Keep only frames where both voiced
+  const pairs = [];
+  for (let i = 0; i < N; i++) {
+    if (oSamples[i] !== null && uSamples[i] !== null) pairs.push([oSamples[i], uSamples[i]]);
+  }
+  if (pairs.length < 8) return null;
+  // Correlation on log-pitch (so we score *contour shape*, ignore absolute key)
+  const meanO = pairs.reduce((s, p) => s + p[0], 0) / pairs.length;
+  const meanU = pairs.reduce((s, p) => s + p[1], 0) / pairs.length;
+  let num = 0, dO = 0, dU = 0;
+  for (const [o, u] of pairs) {
+    const ao = o - meanO, au = u - meanU;
+    num += ao * au; dO += ao * ao; dU += au * au;
+  }
+  if (dO === 0 || dU === 0) return null;
+  const r = num / Math.sqrt(dO * dU);
+  // Map -1..1 → 0..100, but anything below 0 (anti-correlation) is just 0
+  return Math.max(0, Math.min(100, r * 100));
+}
+function sampleContourLog(contour, t) {
+  // Find nearest two valid points and lerp on log scale
+  let prev = null, next = null;
+  for (const p of contour) {
+    if (p.hz <= 0) continue;
+    if (p.t <= t) prev = p;
+    if (p.t >= t && !next) { next = p; break; }
+  }
+  if (!prev && !next) return null;
+  if (!prev) return Math.log2(next.hz);
+  if (!next) return Math.log2(prev.hz);
+  if (prev === next) return Math.log2(prev.hz);
+  const frac = (t - prev.t) / (next.t - prev.t);
+  return Math.log2(prev.hz) * (1 - frac) + Math.log2(next.hz) * frac;
+}
+
+// ============================================================
+// STRESS TIMELINE (Phase 3)
+// Identifies stressed syllables as RMS energy peaks, draws them as bars.
+// ============================================================
+function buildStressTimelineControls(phrase) {
+  const wrap = document.createElement('div');
+  wrap.className = 'stress-wrap';
+  const canvas = document.createElement('canvas');
+  canvas.className = 'stress-canvas';
+  wrap.appendChild(canvas);
+  dynamicControls.appendChild(wrap);
+
+  if (!phrase._stress) {
+    phrase._stress = extractStressTimeline(state.originalBuffer, phrase.start, phrase.end);
+  }
+  setTimeout(() => sizePitchCanvas(canvas), 0);
+  drawStressTimeline(canvas, phrase._stress, phrase.end - phrase.start, 0);
+
+  const playBtn = document.createElement('button');
+  playBtn.textContent = '▶︎ Play & whisper (0.75×)';
+  playBtn.onclick = async () => {
+    await unlockAudio();
+    setRate(0.75);
+    playSegment(phrase.start, phrase.end, false);
+    // Animate playhead on the stress timeline
+    const startT = state.audioCtx ? state.audioCtx.currentTime : 0;
+    const dur = phrase.end - phrase.start;
+    const tick = () => {
+      if (!state.audioEl || state.audioEl.paused) {
+        drawStressTimeline(canvas, phrase._stress, dur, 0);
+        return;
+      }
+      const t = state.audioEl.currentTime - phrase.start;
+      drawStressTimeline(canvas, phrase._stress, dur, t);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const loopBtn = document.createElement('button');
+  loopBtn.textContent = '🔁 Loop on whisper-along';
+  loopBtn.className = 'warn';
+  loopBtn.onclick = async () => {
+    await unlockAudio();
+    setRate(0.75);
+    playSegment(phrase.start, phrase.end, true);
+    const dur = phrase.end - phrase.start;
+    const tick = () => {
+      if (!state.audioEl || state.audioEl.paused) {
+        drawStressTimeline(canvas, phrase._stress, dur, 0);
+        return;
+      }
+      const t = (state.audioEl.currentTime - phrase.start + dur) % dur;
+      drawStressTimeline(canvas, phrase._stress, dur, t);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  dynamicControls.appendChild(playBtn);
+  dynamicControls.appendChild(loopBtn);
+}
+
+function extractStressTimeline(buffer, startSec, endSec) {
+  const data = buffer.getChannelData(0);
+  const sr = buffer.sampleRate;
+  const winSize = Math.floor(sr * 0.04);
+  const hop = Math.floor(sr * 0.02);
+  const startSample = Math.floor(startSec * sr);
+  const endSample = Math.min(data.length, Math.floor(endSec * sr));
+
+  const env = [];
+  for (let i = startSample; i + winSize < endSample; i += hop) {
+    let sum = 0;
+    for (let j = 0; j < winSize; j++) {
+      const v = data[i + j];
+      sum += v * v;
+    }
+    env.push({ t: (i - startSample) / sr, e: Math.sqrt(sum / winSize) });
+  }
+  // Smooth with 3-frame moving average
+  const smoothed = env.map((p, i) => {
+    const a = env[Math.max(0, i - 1)].e;
+    const b = p.e;
+    const c = env[Math.min(env.length - 1, i + 1)].e;
+    return { t: p.t, e: (a + b + c) / 3 };
+  });
+  return smoothed;
+}
+
+function drawStressTimeline(canvas, env, totalDur, playheadT) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  ctx.clearRect(0, 0, w, h);
+  if (!env || !env.length) return;
+
+  const maxE = env.reduce((m, p) => Math.max(m, p.e), 0) || 1;
+  const barCount = Math.min(80, env.length);
+  const bucketSize = env.length / barCount;
+  const barWidth = (w - 4) / barCount;
+
+  for (let i = 0; i < barCount; i++) {
+    let sum = 0, n = 0;
+    const i0 = Math.floor(i * bucketSize);
+    const i1 = Math.min(env.length, Math.floor((i + 1) * bucketSize));
+    for (let j = i0; j < i1; j++) { sum += env[j].e; n++; }
+    const e = n ? sum / n : 0;
+    const barH = (e / maxE) * (h - 8);
+    const x = 2 + i * barWidth;
+    const y = h - barH - 2;
+    // Color: tall = orange (stressed beat), short = dim (compressed function word)
+    const intensity = e / maxE;
+    if (intensity > 0.65) ctx.fillStyle = '#f59e0b';
+    else if (intensity > 0.35) ctx.fillStyle = '#818cf8';
+    else ctx.fillStyle = '#475569';
+    ctx.fillRect(x, y, Math.max(1, barWidth - 1), barH);
+  }
+
+  // Playhead
+  if (playheadT > 0 && totalDur > 0) {
+    const x = (playheadT / totalDur) * w;
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(x - 1, 0, 2, h);
+  }
+}
+
+// ============================================================
+// REDUCTION DRILLS
+// Scans the script line for known American English reductions
+// and shows a card with the target → reduced form + drill tip.
+// ============================================================
+const REDUCTIONS = [
+  { pattern: /\b(going to)\b/gi,    target: 'going to',  reduced: 'gonna',       tip: 'Tongue stays back. /goh-nuh/ — flow it together, no separate words.' },
+  { pattern: /\b(want to)\b/gi,     target: 'want to',   reduced: 'wanna',       tip: 'Drop the T entirely. /wah-nuh/. Should feel like one word.' },
+  { pattern: /\b(have to)\b/gi,     target: 'have to',   reduced: 'hafta',       tip: 'V devoices to F. /haf-tuh/.' },
+  { pattern: /\b(has to)\b/gi,      target: 'has to',    reduced: 'hasta',       tip: 'S stays voiceless. /has-tuh/.' },
+  { pattern: /\b(got to)\b/gi,      target: 'got to',    reduced: 'gotta',       tip: 'Flap T between vowels. /gah-duh/.' },
+  { pattern: /\b(got a)\b/gi,       target: 'got a',     reduced: 'gotta',       tip: 'Same flap T as "gotta" above. /gah-duh/.' },
+  { pattern: /\b(out of)\b/gi,      target: 'out of',    reduced: 'outta',       tip: 'Flap the T, schwa the "of". /ow-duh/.' },
+  { pattern: /\b(kind of)\b/gi,     target: 'kind of',   reduced: 'kinda',       tip: 'Drop the D. /kai-nuh/.' },
+  { pattern: /\b(sort of)\b/gi,     target: 'sort of',   reduced: 'sorta',       tip: 'Flap the T. /sor-duh/.' },
+  { pattern: /\b(lot of)\b/gi,      target: 'lot of',    reduced: 'lotta',       tip: 'Flap T. /lah-duh/.' },
+  { pattern: /\b(let me)\b/gi,      target: 'let me',    reduced: 'lemme',       tip: 'Drop the T entirely. /leh-mee/.' },
+  { pattern: /\b(give me)\b/gi,     target: 'give me',   reduced: 'gimme',       tip: 'V drops, M doubles. /gih-mee/.' },
+  { pattern: /\b(did you)\b/gi,     target: 'did you',   reduced: 'didja',       tip: 'D + Y → J sound. /dih-juh/.' },
+  { pattern: /\b(don't you)\b/gi,   target: "don't you", reduced: 'doncha',      tip: 'T + Y → CH sound. /dohn-chuh/.' },
+  { pattern: /\b(could you)\b/gi,   target: 'could you', reduced: 'couldja',     tip: 'D + Y → J. /koo-juh/.' },
+  { pattern: /\b(would you)\b/gi,   target: 'would you', reduced: 'wouldja',     tip: 'D + Y → J. /woo-juh/.' },
+  { pattern: /\b(what are you)\b/gi,target: 'what are you', reduced: 'whaddaya', tip: 'Flap T + crushed "are". /wuh-duh-yuh/. Three syllables, fast.' },
+  { pattern: /\b(what do you)\b/gi, target: 'what do you', reduced: 'whaddaya',  tip: 'Flap T + crushed "do". /wuh-duh-yuh/.' },
+  { pattern: /\b(how are you)\b/gi, target: 'how are you', reduced: 'howarya',   tip: '"are" reduces to /er/. /how-er-yuh/.' },
+  { pattern: /\b(how is it)\b/gi,   target: 'how is it', reduced: 'howzit',      tip: 'Z links to it, flap T. /how-zit/.' },
+  { pattern: /\b(should have)\b/gi, target: 'should have', reduced: 'shoulda',   tip: 'Drop the V entirely. /shuh-duh/. Same for "could have", "would have".' },
+  { pattern: /\b(could have)\b/gi,  target: 'could have', reduced: 'coulda',     tip: 'Drop the V. /koo-duh/.' },
+  { pattern: /\b(would have)\b/gi,  target: 'would have', reduced: 'woulda',     tip: 'Drop the V. /woo-duh/.' },
+  { pattern: /\b(must have)\b/gi,   target: 'must have', reduced: 'musta',       tip: 'Drop the V. /muh-stuh/.' },
+  { pattern: /\bing\b/gi,           target: '-ing endings', reduced: "-in'",     tip: 'Casual American drops the G. "doing" → /doo-in/, "going" → /goh-in/.' },
+];
+
+function detectReductions(text) {
+  if (!text) return [];
+  const found = [];
+  const seen = new Set();
+  for (const r of REDUCTIONS) {
+    if (r.pattern.test(text)) {
+      if (!seen.has(r.reduced)) {
+        found.push(r);
+        seen.add(r.reduced);
+      }
+    }
+    r.pattern.lastIndex = 0;
+  }
+  return found;
+}
+
+function renderReductionPanel(line) {
+  // Remove any existing panel
+  const existing = document.getElementById('reductionPanel');
+  if (existing) existing.remove();
+  if (!line) return;
+  const reductions = detectReductions(line);
+  if (!reductions.length) return;
+
+  const panel = document.createElement('div');
+  panel.className = 'reduction-card';
+  panel.id = 'reductionPanel';
+  let html = `<div class="reduction-title">🔥 Reductions to drill in this phrase</div>`;
+  for (const r of reductions) {
+    html += `
+      <div class="reduction-item">
+        <div>
+          <span class="reduction-target">${r.target}</span>
+          <span class="reduction-arrow">→</span>
+          <span class="reduction-form">${r.reduced}</span>
+        </div>
+        <div class="reduction-tip">${r.tip}</div>
+      </div>`;
+  }
+  panel.innerHTML = html;
+  // Insert just after the script box
+  scriptBox.parentNode.insertBefore(panel, scriptBox.nextSibling);
+}
+
+// ============================================================
+// LOOPER (Phase 4)
+// ============================================================
+function buildLooperControls(phrase) {
+  const playBtn = document.createElement('button');
+  playBtn.textContent = '▶︎ Play full phrase';
+  playBtn.className = 'secondary';
+  playBtn.onclick = async () => {
+    await unlockAudio();
+    state.loopActive = false;
+    playSegment(phrase.start, phrase.end, false);
+  };
+
+  const status = document.createElement('div');
+  status.className = 'status';
+  status.style.fontFamily = 'ui-monospace, monospace';
+  const updateStatus = () => {
+    const a = state.loopA !== null ? state.loopA.toFixed(2) + 's' : '—';
+    const b = state.loopB !== null ? state.loopB.toFixed(2) + 's' : '—';
+    status.textContent = `A: ${a}    B: ${b}`;
+    drawWaveform();
+  };
+  updateStatus();
+
+  const grid = document.createElement('div');
+  grid.className = 'btn-row';
+
+  const setA = document.createElement('button');
+  setA.className = 'compact secondary';
+  setA.textContent = '🅰 Set A';
+  setA.onclick = () => {
+    state.loopA = currentPlayheadTime();
+    if (state.loopB !== null && state.loopA >= state.loopB) state.loopB = null;
+    updateStatus();
+  };
+
+  const setB = document.createElement('button');
+  setB.className = 'compact secondary';
+  setB.textContent = '🅱 Set B';
+  setB.onclick = () => {
+    state.loopB = currentPlayheadTime();
+    if (state.loopA !== null && state.loopB <= state.loopA) state.loopA = null;
+    updateStatus();
+  };
+
+  const loopBtn = document.createElement('button');
+  loopBtn.className = 'warn';
+  loopBtn.textContent = '🔁 Loop A↔B';
+  loopBtn.onclick = async () => {
+    await unlockAudio();
+    if (state.loopA === null || state.loopB === null || state.loopA >= state.loopB) {
+      toast('Set both A and B first.');
+      return;
+    }
+    playSegment(state.loopA, state.loopB, true);
+  };
+
+  const stopBtn = document.createElement('button');
+  stopBtn.className = 'compact ghost';
+  stopBtn.textContent = '⏹ Stop';
+  stopBtn.onclick = () => stopAudio();
+
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'compact ghost';
+  clearBtn.textContent = '✕ Clear';
+  clearBtn.onclick = () => {
+    state.loopA = state.loopB = null;
+    stopAudio();
+    updateStatus();
+  };
+
+  grid.appendChild(setA);
+  grid.appendChild(setB);
+  grid.appendChild(stopBtn);
+  grid.appendChild(clearBtn);
+
+  dynamicControls.appendChild(playBtn);
+  dynamicControls.appendChild(loopBtn);
+  dynamicControls.appendChild(status);
+  dynamicControls.appendChild(grid);
+
+  // Help text
+  const help = document.createElement('div');
+  help.className = 'status';
+  help.style.fontSize = '0.8rem';
+  help.textContent = 'Tip: tap the waveform to set A, long-press to set B.';
+  dynamicControls.appendChild(help);
+}
+
+function currentPlayheadTime() {
+  if (state.audioEl && !state.audioEl.paused) return state.audioEl.currentTime;
+  // Fall back to phrase start
+  return state.phrases[state.currentPhraseIdx].start;
+}
+
+// ============================================================
+// RECORD & REVIEW (Phase 5)
+// ============================================================
+function buildRecordControls(phrase) {
+  const recBtn = document.createElement('button');
+  recBtn.className = 'danger';
+  recBtn.textContent = '🔴 Tap to record take';
+
+  const meterWrap = document.createElement('div');
+  meterWrap.className = 'mic-meter';
+  const meterFill = document.createElement('div');
+  meterFill.className = 'mic-meter-fill';
+  meterWrap.appendChild(meterFill);
+  meterWrap.style.display = 'none';
+
+  const playerContainer = document.createElement('div');
+  playerContainer.className = 'take-player';
+  playerContainer.style.display = 'none';
+  playerContainer.innerHTML = `
+    <p>🎧 Review (use stereo headphones — left = original, right = you)</p>
+    <audio controls></audio>
+  `;
+
+  recBtn.onclick = async () => {
+    await unlockAudio();
+    const ok = await ensureMic();
+    if (!ok) return;
+
+    recBtn.disabled = true;
+    recBtn.textContent = '🎙 Recording… speak with them!';
+    meterWrap.style.display = 'block';
+    startMicMeter(meterFill);
+
+    await startRecording();
+
+    // Start playback at the same speed selected (1.0 by default for record)
+    setRate(1.0);
+    document.querySelectorAll('#speedRow button').forEach(b => b.classList.toggle('active', b.dataset.rate === '1'));
+    playSegment(phrase.start, phrase.end, false);
+
+    // Auto-stop a bit after the phrase ends
+    const phraseDuration = phrase.end - phrase.start;
+    const totalMs = phraseDuration * 1000 + 600;
+    setTimeout(async () => {
+      stopMicMeter();
+      meterWrap.style.display = 'none';
+      const blob = await stopRecording();
+      recBtn.textContent = '⚙ Mixing audio…';
+      const ok2 = await renderReview(blob, phrase, playerContainer.querySelector('audio'));
+      if (ok2) {
+        playerContainer.style.display = 'block';
+        recBtn.textContent = '🔁 Re-record this phrase';
+      } else {
+        recBtn.textContent = '🔴 Tap to record take';
+      }
+      recBtn.disabled = false;
+    }, totalMs);
+  };
+
+  dynamicControls.appendChild(recBtn);
+  dynamicControls.appendChild(meterWrap);
+  dynamicControls.appendChild(playerContainer);
+}
+
+async function startRecording() {
+  state.recChunks = [];
+  // iOS Safari/Edge support audio/mp4 (AAC) reliably; use that first.
+  const candidates = [
+    'audio/mp4;codecs=mp4a.40.2',
+    'audio/mp4',
+    'audio/aac',
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    ''
+  ];
+  let mime = '';
+  for (const c of candidates) {
+    if (c === '' || (window.MediaRecorder && MediaRecorder.isTypeSupported(c))) { mime = c; break; }
+  }
+  state.recMimeType = mime || 'audio/mp4';
+  try {
+    state.mediaRecorder = mime
+      ? new MediaRecorder(state.micStream, { mimeType: mime })
+      : new MediaRecorder(state.micStream);
+  } catch (e) {
+    state.mediaRecorder = new MediaRecorder(state.micStream);
+  }
+  state.mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) state.recChunks.push(e.data); };
+  // Request data every 250ms — ensures iOS doesn't lose the final chunk
+  state.mediaRecorder.start(250);
+}
+
+function stopRecording() {
+  return new Promise(resolve => {
+    if (!state.mediaRecorder || state.mediaRecorder.state === 'inactive') {
+      resolve(new Blob(state.recChunks, { type: state.recMimeType }));
+      return;
+    }
+    state.mediaRecorder.onstop = () => {
+      resolve(new Blob(state.recChunks, { type: state.recMimeType }));
+    };
+    try { state.mediaRecorder.requestData(); } catch (e) {}
+    state.mediaRecorder.stop();
+  });
+}
+
+async function renderReview(blob, phrase, audioEl) {
+  if (!blob || blob.size < 200) {
+    toast('Recording was empty. Check the mic level meter.');
+    return false;
+  }
+
+  // Decode the take
+  let takeBuffer;
+  try {
+    const arr = await blob.arrayBuffer();
+    takeBuffer = await new Promise((resolve, reject) => {
+      try {
+        const p = state.audioCtx.decodeAudioData(arr.slice(0), resolve, reject);
+        if (p && typeof p.then === 'function') p.then(resolve).catch(reject);
+      } catch (err) { reject(err); }
+    });
+  } catch (e) {
+    toast('Could not decode recording. Try recording again.');
+    console.error(e);
+    return false;
+  }
+
+  // Mix: original (left) + take (right), length = max of both
+  const sr = takeBuffer.sampleRate;
+  const phraseDuration = phrase.end - phrase.start;
+  const renderDuration = Math.max(phraseDuration, takeBuffer.duration);
+  const renderLen = Math.ceil(renderDuration * sr);
+
+  const offline = new OfflineAudioContext(2, renderLen, sr);
+
+  // Original on the left channel (downmix to mono first)
+  const origMono = downmixToMono(state.originalBuffer, sr);
+  const origSrc = offline.createBufferSource();
+  origSrc.buffer = sliceBuffer(offline, origMono, phrase.start, phrase.end);
+  const origPan = offline.createStereoPanner ? offline.createStereoPanner() : null;
+  if (origPan) {
+    origPan.pan.value = -1;
+    origSrc.connect(origPan).connect(offline.destination);
+  } else {
+    // Fallback: ChannelMerger
+    const merger = offline.createChannelMerger(2);
+    origSrc.connect(merger, 0, 0);
+    merger.connect(offline.destination);
+  }
+  origSrc.start(0);
+
+  // Take on right channel (mono down-mix)
+  const takeMono = downmixToMono(takeBuffer, sr);
+  const takeSrc = offline.createBufferSource();
+  takeSrc.buffer = takeMono;
+  if (offline.createStereoPanner) {
+    const takePan = offline.createStereoPanner();
+    takePan.pan.value = 1;
+    takeSrc.connect(takePan).connect(offline.destination);
+  } else {
+    const merger = offline.createChannelMerger(2);
+    takeSrc.connect(merger, 0, 1);
+    merger.connect(offline.destination);
+  }
+  takeSrc.start(0);
+
+  const rendered = await offline.startRendering();
+  const wavBlob = encodeWAV(rendered);
+  audioEl.src = URL.createObjectURL(wavBlob);
+  return true;
+}
+
+function downmixToMono(buffer, targetSr) {
+  // If channels > 1, average. Resampling is left to OfflineAudioContext (matching SR is enforced upstream).
+  if (buffer.sampleRate !== targetSr) {
+    // create a mono resampled buffer using OfflineAudioContext
+    // For simplicity, return original — OfflineAudioContext will handle SR mismatch via its own pipeline,
+    // but to be safe we resample manually.
+    return resampleBuffer(buffer, targetSr);
+  }
+  if (buffer.numberOfChannels === 1) return buffer;
+  const ctx = state.audioCtx;
+  const out = ctx.createBuffer(1, buffer.length, buffer.sampleRate);
+  const dst = out.getChannelData(0);
+  const ch0 = buffer.getChannelData(0);
+  const ch1 = buffer.getChannelData(1);
+  for (let i = 0; i < buffer.length; i++) dst[i] = 0.5 * (ch0[i] + ch1[i]);
+  return out;
+}
+
+function resampleBuffer(buffer, targetSr) {
+  const ratio = targetSr / buffer.sampleRate;
+  const newLen = Math.floor(buffer.length * ratio);
+  const out = state.audioCtx.createBuffer(1, newLen, targetSr);
+  const dst = out.getChannelData(0);
+  const src = buffer.numberOfChannels === 1
+    ? buffer.getChannelData(0)
+    : (() => {
+        const a = buffer.getChannelData(0);
+        const b = buffer.getChannelData(1);
+        const m = new Float32Array(buffer.length);
+        for (let i = 0; i < buffer.length; i++) m[i] = 0.5 * (a[i] + b[i]);
+        return m;
+      })();
+  for (let i = 0; i < newLen; i++) {
+    const srcPos = i / ratio;
+    const i0 = Math.floor(srcPos);
+    const i1 = Math.min(i0 + 1, src.length - 1);
+    const frac = srcPos - i0;
+    dst[i] = src[i0] * (1 - frac) + src[i1] * frac;
+  }
+  return out;
+}
+
+function sliceBuffer(ctx, buffer, startSec, endSec) {
+  const sr = buffer.sampleRate;
+  const startSample = Math.max(0, Math.floor(startSec * sr));
+  const endSample = Math.min(buffer.length, Math.floor(endSec * sr));
+  const len = Math.max(0, endSample - startSample);
+  const out = ctx.createBuffer(1, len, sr);
+  out.getChannelData(0).set(buffer.getChannelData(0).subarray(startSample, endSample));
+  return out;
+}
+
+// ============================================================
+// MIC LEVEL METER
+// ============================================================
+function startMicMeter(fillEl) {
+  if (!state.audioCtx || !state.micStream) return;
+  if (state.micAnalyser) stopMicMeter();
+  const src = state.audioCtx.createMediaStreamSource(state.micStream);
+  const analyser = state.audioCtx.createAnalyser();
+  analyser.fftSize = 1024;
+  src.connect(analyser);
+  state.micAnalyser = analyser;
+  state.micSource = src;
+  const buf = new Uint8Array(analyser.fftSize);
+  const tick = () => {
+    if (!state.micAnalyser) return;
+    analyser.getByteTimeDomainData(buf);
+    let peak = 0;
+    for (let i = 0; i < buf.length; i++) {
+      const v = Math.abs(buf[i] - 128) / 128;
+      if (v > peak) peak = v;
+    }
+    fillEl.style.width = Math.min(100, peak * 130) + '%';
+    state.micRafId = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function stopMicMeter() {
+  if (state.micRafId) cancelAnimationFrame(state.micRafId);
+  state.micRafId = null;
+  if (state.micSource) try { state.micSource.disconnect(); } catch(e){}
+  state.micSource = null;
+  state.micAnalyser = null;
+}
+
+// ============================================================
+// CORE PLAYBACK (using <audio> for pitch-preserving rate)
+// ============================================================
+function setRate(r) {
+  state.playbackRate = r;
+  if (state.audioEl) state.audioEl.playbackRate = r;
+  document.querySelectorAll('#speedRow button').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.dataset.rate) === r);
+  });
+}
+
+speedRow.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-rate]');
+  if (!btn) return;
+  setRate(parseFloat(btn.dataset.rate));
+});
+
+function playSegment(start, end, loop) {
+  stopAudio();
+  if (!state.audioEl) return;
+  state.audioEl.playbackRate = state.playbackRate;
+  state.audioEl.currentTime = Math.max(0, start);
+  const playPromise = state.audioEl.play();
+  if (playPromise && playPromise.catch) playPromise.catch(err => console.warn('play() rejected', err));
+
+  // Watchdog: stop at `end` (or loop back to start)
+  const tick = () => {
+    if (state.audioEl.paused) return;
+    if (state.audioEl.currentTime >= end - 0.005) {
+      if (loop) {
+        state.audioEl.currentTime = start;
+      } else {
+        state.audioEl.pause();
+      }
+    }
+    drawWaveform(); // redraw full so the playhead doesn't leave a trail
+    state.loopWatchTimer = requestAnimationFrame(tick);
+  };
+  state.loopWatchTimer = requestAnimationFrame(tick);
+}
+
+function stopAudio() {
+  if (state.audioEl) {
+    try { state.audioEl.pause(); } catch (e) {}
+  }
+  if (state.loopWatchTimer) cancelAnimationFrame(state.loopWatchTimer);
+  state.loopWatchTimer = null;
+}
+
+// ============================================================
+// WAVEFORM RENDERING + INTERACTION
+// ============================================================
+function sizeWaveform() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const cssW = waveCanvas.clientWidth;
+  const cssH = waveCanvas.clientHeight;
+  waveCanvas.width = Math.floor(cssW * dpr);
+  waveCanvas.height = Math.floor(cssH * dpr);
+  waveCanvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawWaveform();
+}
+window.addEventListener('resize', sizeWaveform);
+
+function drawWaveform() {
+  if (!state.originalBuffer || !state.phrases.length) return;
+  const phrase = state.phrases[state.currentPhraseIdx];
+  if (!phrase) return;
+
+  const ctx = waveCanvas.getContext('2d');
+  const w = waveCanvas.clientWidth;
+  const h = waveCanvas.clientHeight;
+  ctx.clearRect(0, 0, w, h);
+
+  // Background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, w, h);
+
+  const data = state.originalBuffer.getChannelData(0);
+  const sr = state.originalBuffer.sampleRate;
+  const startSample = Math.floor(phrase.start * sr);
+  const endSample = Math.min(data.length, Math.floor(phrase.end * sr));
+  const totalSamples = endSample - startSample;
+  const samplesPerPx = totalSamples / w;
+
+  // Waveform
+  ctx.fillStyle = '#38bdf8';
+  for (let x = 0; x < w; x++) {
+    const i0 = startSample + Math.floor(x * samplesPerPx);
+    const i1 = startSample + Math.floor((x + 1) * samplesPerPx);
+    let min = 0, max = 0;
+    for (let i = i0; i < i1 && i < data.length; i++) {
+      const v = data[i];
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    const yMin = (1 - min) * h / 2;
+    const yMax = (1 - max) * h / 2;
+    ctx.fillRect(x, Math.min(yMin, yMax), 1, Math.max(1, Math.abs(yMax - yMin)));
+  }
+
+  // A/B markers
+  if (state.loopA !== null && state.loopA >= phrase.start && state.loopA <= phrase.end) {
+    const x = ((state.loopA - phrase.start) / (phrase.end - phrase.start)) * w;
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.85)';
+    ctx.fillRect(x - 1, 0, 2, h);
+    ctx.fillStyle = '#0b1120';
+    ctx.fillRect(x - 8, 0, 16, 14);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '700 10px ui-monospace, monospace';
+    ctx.fillText('A', x - 4, 11);
+  }
+  if (state.loopB !== null && state.loopB >= phrase.start && state.loopB <= phrase.end) {
+    const x = ((state.loopB - phrase.start) / (phrase.end - phrase.start)) * w;
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.85)';
+    ctx.fillRect(x - 1, 0, 2, h);
+    ctx.fillStyle = '#0b1120';
+    ctx.fillRect(x - 8, 0, 16, 14);
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '700 10px ui-monospace, monospace';
+    ctx.fillText('B', x - 4, 11);
+  }
+
+  // A↔B band shading
+  if (state.loopA !== null && state.loopB !== null && state.loopA < state.loopB) {
+    const xA = ((state.loopA - phrase.start) / (phrase.end - phrase.start)) * w;
+    const xB = ((state.loopB - phrase.start) / (phrase.end - phrase.start)) * w;
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+    ctx.fillRect(xA, 14, xB - xA, h - 14);
+  }
+
+  drawPlayhead();
+  waveTimeStart.textContent = fmtTime(phrase.start);
+  waveTimeEnd.textContent = fmtTime(phrase.end);
+}
+
+function drawPlayhead() {
+  if (!state.originalBuffer || !state.phrases.length || !state.audioEl) return;
+  const phrase = state.phrases[state.currentPhraseIdx];
+  if (!phrase) return;
+  // Don't redraw whole waveform every frame — overlay is fine because we redrew above on segment change.
+  // But we need to re-render to clear old playhead. Cheap path: re-run drawWaveform.
+  // Performance is fine for 60fps on modern iPads with 800px canvas.
+  const t = state.audioEl.currentTime;
+  if (t < phrase.start || t > phrase.end) return;
+  const ctx = waveCanvas.getContext('2d');
+  const w = waveCanvas.clientWidth;
+  const h = waveCanvas.clientHeight;
+  const x = ((t - phrase.start) / (phrase.end - phrase.start)) * w;
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(x - 1, 0, 2, h);
+}
+
+// Waveform tap = set A; long-press = set B; double-tap to seek
+let pressTimer = null;
+let pressStart = 0;
+let pressX = 0;
+const LONG_PRESS_MS = 450;
+
+function canvasXToTime(x) {
+  const phrase = state.phrases[state.currentPhraseIdx];
+  const w = waveCanvas.clientWidth;
+  const ratio = Math.min(1, Math.max(0, x / w));
+  return phrase.start + ratio * (phrase.end - phrase.start);
+}
+
+waveCanvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const rect = waveCanvas.getBoundingClientRect();
+  pressX = e.clientX - rect.left;
+  pressStart = Date.now();
+  pressTimer = setTimeout(() => {
+    // long-press = Set B
+    if (state.currentStep === 4) {
+      state.loopB = canvasXToTime(pressX);
+      if (state.loopA !== null && state.loopB <= state.loopA) state.loopA = null;
+      drawWaveform();
+      // also refresh status text in dynamicControls if present
+      const stat = dynamicControls.querySelector('.status');
+      if (stat) {
+        const a = state.loopA !== null ? state.loopA.toFixed(2) + 's' : '—';
+        const b = state.loopB !== null ? state.loopB.toFixed(2) + 's' : '—';
+        stat.textContent = `A: ${a}    B: ${b}`;
+      }
+      navigator.vibrate && navigator.vibrate(15);
+    }
+    pressTimer = null;
+  }, LONG_PRESS_MS);
+});
+
+waveCanvas.addEventListener('pointerup', e => {
+  if (pressTimer) {
+    clearTimeout(pressTimer);
+    pressTimer = null;
+    // short tap
+    const rect = waveCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const t = canvasXToTime(x);
+    if (state.currentStep === 4) {
+      state.loopA = t;
+      if (state.loopB !== null && state.loopA >= state.loopB) state.loopB = null;
+      drawWaveform();
+      const stat = dynamicControls.querySelector('.status');
+      if (stat) {
+        const a = state.loopA !== null ? state.loopA.toFixed(2) + 's' : '—';
+        const b = state.loopB !== null ? state.loopB.toFixed(2) + 's' : '—';
+        stat.textContent = `A: ${a}    B: ${b}`;
+      }
+    } else {
+      // Outside phase 4: tap to seek + play from there
+      if (state.audioEl) {
+        state.audioEl.currentTime = t;
+        const phrase = state.phrases[state.currentPhraseIdx];
+        playSegment(t, phrase.end, false);
+      }
+    }
+  }
+});
+waveCanvas.addEventListener('pointercancel', () => {
+  if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+});
+waveCanvas.addEventListener('pointerleave', () => {
+  if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+});
+
+// ============================================================
+// PHRASE EDITING TOOLS
+// ============================================================
+$('splitHereBtn').onclick = () => {
+  if (!state.audioEl || state.audioEl.paused) {
+    toast('Play the phrase first, then split at the playhead.');
+    return;
+  }
+  const t = state.audioEl.currentTime;
+  const cur = state.phrases[state.currentPhraseIdx];
+  if (t <= cur.start + 0.2 || t >= cur.end - 0.2) {
+    toast('Move further from the edges before splitting.');
+    return;
+  }
+  state.phrases.splice(state.currentPhraseIdx, 1, { start: cur.start, end: t }, { start: t, end: cur.end });
+  buildPhraseNav();
+  loadPhraseStep();
+  toast('Phrase split.');
+};
+
+$('mergeNextBtn').onclick = () => {
+  if (state.currentPhraseIdx >= state.phrases.length - 1) { toast('No next phrase to merge.'); return; }
+  const cur = state.phrases[state.currentPhraseIdx];
+  const next = state.phrases[state.currentPhraseIdx + 1];
+  state.phrases.splice(state.currentPhraseIdx, 2, { start: cur.start, end: next.end });
+  buildPhraseNav();
+  loadPhraseStep();
+  toast('Merged with next.');
+};
+
+$('trimStartBtn').onclick = () => {
+  if (!state.audioEl || state.audioEl.paused) { toast('Play the phrase first.'); return; }
+  const t = state.audioEl.currentTime;
+  const cur = state.phrases[state.currentPhraseIdx];
+  if (t <= cur.start || t >= cur.end - 0.2) { toast('Playhead must be inside the phrase.'); return; }
+  state.phrases[state.currentPhraseIdx] = { start: t, end: cur.end };
+  loadPhraseStep();
+  toast('Start trimmed to playhead.');
+};
+
+$('trimEndBtn').onclick = () => {
+  if (!state.audioEl || state.audioEl.paused) { toast('Play the phrase first.'); return; }
+  const t = state.audioEl.currentTime;
+  const cur = state.phrases[state.currentPhraseIdx];
+  if (t <= cur.start + 0.2 || t >= cur.end) { toast('Playhead must be inside the phrase.'); return; }
+  state.phrases[state.currentPhraseIdx] = { start: cur.start, end: t };
+  loadPhraseStep();
+  toast('End trimmed to playhead.');
+};
+
+// ============================================================
+// SCRIPT BLUR TOGGLE
+// ============================================================
+scriptBox.addEventListener('click', () => {
+  scriptBox.classList.toggle('blurred');
+});
+
+// ============================================================
+// WAKE LOCK (keep iPad screen awake during practice)
+// ============================================================
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      state.wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (e) { /* not critical */ }
+}
+function releaseWakeLock() {
+  try { state.wakeLock && state.wakeLock.release(); } catch(e){}
+  state.wakeLock = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && workoutUI.style.display === 'block') {
+    requestWakeLock();
+  }
+});
+
+// ============================================================
+// WAV ENCODER (for review playback)
+// ============================================================
+function encodeWAV(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length * numChannels * 2;
+  const view = new DataView(new ArrayBuffer(44 + length));
+  let offset = 0;
+  const writeStr = s => { for (let i = 0; i < s.length; i++) view.setUint8(offset++, s.charCodeAt(i)); };
+  const writeU32 = v => { view.setUint32(offset, v, true); offset += 4; };
+  const writeU16 = v => { view.setUint16(offset, v, true); offset += 2; };
+
+  writeStr('RIFF');
+  writeU32(36 + length);
+  writeStr('WAVE');
+  writeStr('fmt ');
+  writeU32(16);
+  writeU16(1);
+  writeU16(numChannels);
+  writeU32(sampleRate);
+  writeU32(sampleRate * numChannels * 2);
+  writeU16(numChannels * 2);
+  writeU16(16);
+  writeStr('data');
+  writeU32(length);
+
+  const channels = [];
+  for (let c = 0; c < numChannels; c++) channels.push(buffer.getChannelData(c));
+  for (let i = 0; i < buffer.length; i++) {
+    for (let c = 0; c < numChannels; c++) {
+      let s = Math.max(-1, Math.min(1, channels[c][i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      offset += 2;
+    }
+  }
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+// ============================================================
+// FIRST-TIME TIPS — detect ALL local-file sandbox schemes
+// ============================================================
+const proto = location.protocol;
+const isLocalSandbox = proto === 'file:' || proto.startsWith('edge') || proto === 'content:' || proto === 'ms-appx-web:';
+if (isLocalSandbox) {
+  setTimeout(() => {
+    micStatus.style.display = 'block';
+    micStatus.innerHTML =
+      `⛔ This page is loaded inside a local-file sandbox (<code>${proto}</code>). On iPad, that sandbox blocks the file reader, microphone, and audio decoder — the app will not work here.<br>` +
+      `Host the file on <strong>https://</strong> first. Easiest options:<br>` +
+      `&nbsp;• Run <code>python3 -m http.server</code> on a Mac on the same Wi-Fi, then visit <code>http://&lt;mac-ip&gt;:8000/shadowlab.html</code> on iPad.<br>` +
+      `&nbsp;• Push the file to GitHub Pages and bookmark the resulting <code>https://*.github.io/</code> URL.`;
+  }, 200);
+}
+
+</script>
+</body>
+</html>
